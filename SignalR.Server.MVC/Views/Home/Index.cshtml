@@ -1,0 +1,43 @@
+﻿@model SignalR.Server.MVC.Models.UserModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+    <script src="~/Scripts/jquery-1.6.4.min.js"></script>
+    <script src="~/Scripts/jquery.signalR-2.2.2.min.js"></script>
+    <script src="~/signalr/hubs" type="text/javascript"></script>
+</head>
+<body>
+
+    <div>
+        <label>名字：</label><input type="text" id="txtName" value="mol" />
+        <br />
+        <label>消息：</label><input type="text" id="txtMsg" value="这是一条来自火星的消息，hello，地球人！" />
+        <hr />
+        <button id="sendtoserver">发送</button>
+    </div>
+</body>
+</html>
+<script>
+    $(function () {
+        $.connection.molHub.client.onMessage = function (msg) {
+            console.log("我收到了服务端发来的消息，内容是：" + msg);
+        }
+
+        $.connection.hub.qs = { gender: "@Model.Gender", userName: "@Model.UserName", groupName: "@Model.GroupName" }
+        $.connection.hub.start().done(function () {
+            console.log("与服务端连接成功！");
+        }).fail(function () {
+            console.log("与服务端连接失败！");
+        });
+        $('button#sendtoserver').click(function () {
+            $.connection.molHub.server.sendMessage($('input#txtName').val(), $('input#txtMsg').val());
+        });
+    });
+</script>
