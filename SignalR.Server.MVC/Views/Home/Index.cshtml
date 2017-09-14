@@ -14,30 +14,55 @@
     <script src="~/signalr/hubs" type="text/javascript"></script>
 </head>
 <body>
-
+    <fieldset>
+        <legend>个人信息</legend>
+        <div>
+            <ul>
+                <li>姓名：@Model.UserName</li>
+                <li>性别：@Model.Gender</li>
+                <li>分组：@Model.GroupName</li>
+            </ul>
+        </div>
+    </fieldset>
     <div>
-        <label>名字：</label><input type="text" id="txtName" value="mol" />
+        <label>昵称：</label><input type="text" id="txtName" value="@Model.UserName" />
         <br />
         <label>消息：</label><input type="text" id="txtMsg" value="这是一条来自火星的消息，hello，地球人！" />
         <hr />
         <button id="sendtoserver">发送</button>
+    </div>
+    <div>
+        <label>收到的消息：</label>
+        <ul id="ulMsg">
+
+        </ul>
     </div>
 </body>
 </html>
 <script>
     $(function () {
         $.connection.molHub.client.onMessage = function (msg) {
-            console.log("我收到了服务端发来的消息，内容是：" + msg);
+            addMsga(msg);
+            //console.log("我收到了服务端发来的消息，内容是：" + msg);
         }
 
         $.connection.hub.qs = { gender: "@Model.Gender", userName: "@Model.UserName", groupName: "@Model.GroupName" }
-        $.connection.hub.start().done(function () {
-            console.log("与服务端连接成功！");
+        $.connection.hub.start().done(function (data) {
+            console.log(data);
+            $.connection.molHub.server.clientConnection();
+            console.log(-1);
+            addMsga("与服务端连接成功！");
+            //console.log("与服务端连接成功！");
         }).fail(function () {
-            console.log("与服务端连接失败！");
+            addMsga("与服务端连接失败！");
+            //console.log("与服务端连接失败！");
         });
         $('button#sendtoserver').click(function () {
             $.connection.molHub.server.sendMessage($('input#txtName').val(), $('input#txtMsg').val());
         });
     });
+    function addMsga(msg)
+    {
+        $('<li>' + msg + '</li>').appendTo($('ul#ulMsg'));
+    }
 </script>

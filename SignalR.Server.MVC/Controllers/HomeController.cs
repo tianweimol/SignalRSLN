@@ -15,41 +15,55 @@ namespace SignalR.Server.MVC.Controllers
     public class HomeController : Controller
     {
         private static int currentGroup = 0;
-        private static int currentGender = 0;
+        private static string currentGender = "男";
         private static int nameFlag = 0;
         private static RedisHelper helper = new RedisHelper();
         // GET: Home
         public async Task<ActionResult> Index()
         {
-            currentGender = currentGender == 0 ? 1 : 0;
-            if (currentGroup < 2)
+            return await Task.Run(() =>
             {
-                currentGroup++;
-            }
-            else
-            {
-                currentGroup = 0;
-            }
-            UserModel model = new UserModel()
-            {
-                GroupName = $"组{currentGender}",
-                Gender = currentGender,
-                UserName = $"姓名{nameFlag++}"
-            };
-            return View(model);
+                currentGender = currentGender.Equals("男") ? "女" : "男";
+                if (currentGroup < 3)
+                {
+                    currentGroup++;
+                }
+                else
+                {
+                    currentGroup = 0;
+                }
+                UserModel model = new UserModel()
+                {
+                    GroupName = $"组{currentGroup}",
+                    Gender = currentGender,
+                    UserName = $"姓名{nameFlag++}"
+                };
+                return View(model);
+            });
         }
-        /// <summary>
-        /// 将客户端写入到redis中
-        /// </summary>
-        /// <param name="connectionid"></param>
-        /// <param name="name"></param>
-        /// <param name="groupName"></param>
-        /// <param name="gender"></param>
-        /// <returns></returns>
-        public async Task<ActionResult> Connection(string connectionid, string userName, string groupName, string gender)
+
+
+        public async Task<ActionResult> AdminIndex()
         {
-            helper.insertUser(connectionid, userName, groupName,gender);
-            return Content("OK");
+            return await Task.Run(() =>
+            {
+                currentGender = currentGender.Equals("男") ? "女" : "男";
+                if (currentGroup < 3)
+                {
+                    currentGroup++;
+                }
+                else
+                {
+                    currentGroup = 0;
+                }
+                UserModel model = new UserModel()
+                {
+                    GroupName = $"admin组",
+                    Gender = "你猜",
+                    UserName = $"我是管理员"
+                };
+                return View(model);
+            });
         }
        
     }

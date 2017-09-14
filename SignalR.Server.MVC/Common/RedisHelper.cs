@@ -73,7 +73,7 @@ namespace SignalR.Server.MVC.Common
         /// <param name="groupName">组名称</param>
         /// <param name="gender">性别</param>
         /// <param name="dbIndex">哪个库</param>
-        public async void insertUser(string connectionid, string name, string groupName, string gender, int dbIndex = 0)
+        public async Task insertUserAsync(string connectionid, string name, string groupName, string gender, int dbIndex = 0)
         {
             using (ConnectionMultiplexer redis = await ConnectionMultiplexer.ConnectAsync("localhost:6379"))
             {
@@ -89,6 +89,25 @@ namespace SignalR.Server.MVC.Common
                 await db.SetAddAsync(gender, connectionid);
             }
         }
+
+        public void insertUser(string connectionid, string name, string groupName, string gender, int dbIndex = 0)
+        {
+            using (ConnectionMultiplexer redis = ConnectionMultiplexer.Connect("localhost:6379"))
+            {
+                IDatabase db = redis.GetDatabase(dbIndex);
+                // 存储用户
+                db.StringSetAsync(connectionid, name);
+                // 存储组
+                if (!string.IsNullOrEmpty(groupName))
+                {
+                    db.SetAddAsync(groupName, connectionid);
+                }
+                // 存储性别
+                db.SetAddAsync(gender, connectionid);
+            }
+        }
+
+
         public async Task<string> getUserName(string connectionid)
         {
             return await getValue(connectionid);
@@ -141,7 +160,7 @@ namespace SignalR.Server.MVC.Common
         }
 
 
-        public async void RemoveUser(string connectionid,string groupname,string gender, int dbIndex = 0)
+        public async Task RemoveUserAsync(string connectionid,string groupname,string gender, int dbIndex = 0)
         {
             using (ConnectionMultiplexer redis = await ConnectionMultiplexer.ConnectAsync("localhost:6379"))
             {
