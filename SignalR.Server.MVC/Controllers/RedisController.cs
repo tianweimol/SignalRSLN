@@ -10,12 +10,49 @@ namespace SignalR.Server.MVC.Controllers
 {
     public class RedisController : Controller
     {
+        private string _redisServerIP = string.Empty;
+        private string redisServiceIp
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_redisServerIP))
+                {
+                    _redisServerIP = System.Configuration.ConfigurationManager.AppSettings["redisServerIP"];
+                }
+                return _redisServerIP;
+            }
+        }
+        private string _redisPort = string.Empty;
+        private string redisPort
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_redisPort))
+                {
+                    _redisPort = System.Configuration.ConfigurationManager.AppSettings["redisPort"];
+                }
+                return _redisPort;
+            }
+
+        }
+        private string _conStr = string.Empty;
+        private string conStr
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_conStr))
+                {
+                    _conStr = $"{redisServiceIp}:{redisPort}";
+                }
+                return _conStr;
+            }
+        }
         public ActionResult Index()
         {
-            using (ConnectionMultiplexer redis = ConnectionMultiplexer.Connect("localhost:6379"))
+            using (ConnectionMultiplexer redis = ConnectionMultiplexer.Connect(conStr))
             {
                 IDatabase db = redis.GetDatabase(1);
-                db.StringSet("testKey","testValue");
+                db.StringSet("testKey", "testValue");
             }
             return Content("Complete");
         }
@@ -23,10 +60,10 @@ namespace SignalR.Server.MVC.Controllers
 
         public async Task<ActionResult> GetStr()
         {
-            using (ConnectionMultiplexer redis = await ConnectionMultiplexer.ConnectAsync("localhost:6379"))
+            using (ConnectionMultiplexer redis = await ConnectionMultiplexer.ConnectAsync(conStr))
             {
                 IDatabase db = redis.GetDatabase(1);
-                return Content(await db.StringGetAsync("testKey"));                
+                return Content(await db.StringGetAsync("testKey"));
             }
         }
     }

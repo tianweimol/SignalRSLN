@@ -19,28 +19,28 @@ namespace SignalR.Server.MVC.Controllers
         private static int nameFlag = 0;
         private static RedisHelper helper = new RedisHelper();
         // GET: Home
-        public async Task<ActionResult> Index()
+public async Task<ActionResult> Index()
+{
+    return await Task.Run(() =>
+    {
+        currentGender = currentGender.Equals("男") ? "女" : "男";
+        if (currentGroup < 3)
         {
-            return await Task.Run(() =>
-            {
-                currentGender = currentGender.Equals("男") ? "女" : "男";
-                if (currentGroup < 3)
-                {
-                    currentGroup++;
-                }
-                else
-                {
-                    currentGroup = 0;
-                }
-                UserModel model = new UserModel()
-                {
-                    GroupName = $"组{currentGroup}",
-                    Gender = currentGender,
-                    UserName = $"姓名{nameFlag++}"
-                };
-                return View(model);
-            });
+            currentGroup++;
         }
+        else
+        {
+            currentGroup = 0;
+        }
+        UserModel model = new UserModel()
+        {
+            GroupName = $"组{currentGroup}",
+            Gender = currentGender,
+            UserName = $"姓名{nameFlag++}"
+        };
+        return View(model);
+    });
+}
 
 
         public async Task<ActionResult> AdminIndex()

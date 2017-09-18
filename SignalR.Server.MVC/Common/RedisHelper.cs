@@ -11,6 +11,43 @@ namespace SignalR.Server.MVC.Common
 {
     public class RedisHelper
     {
+        private string _redisServerIP = string.Empty;
+        private string redisServiceIp
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_redisServerIP))
+                {
+                    _redisServerIP = System.Configuration.ConfigurationManager.AppSettings["redisServerIP"];
+                }
+                return _redisServerIP;
+            }
+        }
+        private string _redisPort = string.Empty;
+        private string redisPort
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_redisPort))
+                {
+                    _redisPort = System.Configuration.ConfigurationManager.AppSettings["redisPort"];
+                }
+                return _redisPort;
+            }
+
+        }
+        private string _conStr = string.Empty;
+        private string conStr
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_conStr))
+                {
+                    _conStr = $"{redisServiceIp}:{redisPort}";
+                }
+                return _conStr;
+            }
+        }
         /// <summary>
         /// 
         /// </summary>
@@ -19,7 +56,7 @@ namespace SignalR.Server.MVC.Common
         /// <param name="dbIndex"></param>
         public async void SetValue(string key, UserModel value, int dbIndex = 0)
         {
-            using (ConnectionMultiplexer redis = await ConnectionMultiplexer.ConnectAsync("localhost:6379"))
+            using (ConnectionMultiplexer redis = await ConnectionMultiplexer.ConnectAsync(conStr))
             {
                 IDatabase db = redis.GetDatabase(dbIndex);
                 // 如果缓存中已经有了，就不再存储
@@ -39,7 +76,7 @@ namespace SignalR.Server.MVC.Common
 
         public async Task<UserModel> GetValue(string key, int dbIndex = 0)
         {
-            using (ConnectionMultiplexer redis = await ConnectionMultiplexer.ConnectAsync("localhost:6379"))
+            using (ConnectionMultiplexer redis = await ConnectionMultiplexer.ConnectAsync(conStr))
             {
                 IDatabase db = redis.GetDatabase(dbIndex);
                 var tmp = await db.HashGetAllAsync(key);
@@ -75,7 +112,7 @@ namespace SignalR.Server.MVC.Common
         /// <param name="dbIndex">哪个库</param>
         public async Task insertUserAsync(string connectionid, string name, string groupName, string gender, int dbIndex = 0)
         {
-            using (ConnectionMultiplexer redis = await ConnectionMultiplexer.ConnectAsync("localhost:6379"))
+            using (ConnectionMultiplexer redis = await ConnectionMultiplexer.ConnectAsync(conStr))
             {
                 IDatabase db = redis.GetDatabase(dbIndex);
                 // 存储用户
@@ -92,7 +129,7 @@ namespace SignalR.Server.MVC.Common
 
         public void insertUser(string connectionid, string name, string groupName, string gender, int dbIndex = 0)
         {
-            using (ConnectionMultiplexer redis = ConnectionMultiplexer.Connect("localhost:6379"))
+            using (ConnectionMultiplexer redis = ConnectionMultiplexer.Connect(conStr))
             {
                 IDatabase db = redis.GetDatabase(dbIndex);
                 // 存储用户
@@ -128,7 +165,7 @@ namespace SignalR.Server.MVC.Common
         /// <returns></returns>
         private async Task<string> getValue(string key, int dbIndex = 0)
         {
-            using (ConnectionMultiplexer redis = await ConnectionMultiplexer.ConnectAsync("localhost:6379"))
+            using (ConnectionMultiplexer redis = await ConnectionMultiplexer.ConnectAsync(conStr))
             {
                 IDatabase db = redis.GetDatabase(dbIndex);
                 return await db.StringGetAsync(key);
@@ -144,7 +181,7 @@ namespace SignalR.Server.MVC.Common
         private async Task<string[]> getValues(string key, int dbIndex = 0)
         {
             RedisValue[] redisValues;
-            using (ConnectionMultiplexer redis = await ConnectionMultiplexer.ConnectAsync("localhost:6379"))
+            using (ConnectionMultiplexer redis = await ConnectionMultiplexer.ConnectAsync(conStr))
             {
                 IDatabase db = redis.GetDatabase(dbIndex);
                 redisValues = await db.SetMembersAsync(key);
@@ -162,7 +199,7 @@ namespace SignalR.Server.MVC.Common
 
         public async Task RemoveUserAsync(string connectionid,string groupname,string gender, int dbIndex = 0)
         {
-            using (ConnectionMultiplexer redis = await ConnectionMultiplexer.ConnectAsync("localhost:6379"))
+            using (ConnectionMultiplexer redis = await ConnectionMultiplexer.ConnectAsync(conStr))
             {
                 IDatabase db = redis.GetDatabase(dbIndex);
                 // 删除用户

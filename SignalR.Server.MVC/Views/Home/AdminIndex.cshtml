@@ -1,0 +1,128 @@
+﻿@model SignalR.Server.MVC.Models.UserModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>AdminIndex</title>
+    <script src="~/Scripts/jquery-1.6.4.min.js"></script>
+    <script src="~/Scripts/jquery.signalR-2.2.2.min.js"></script>
+    <script src="~/signalr/hubs" type="text/javascript"></script>
+</head>
+<body>
+    <fieldset>
+        <legend>个人信息</legend>
+        <div>
+            <ul>
+                <li>姓名：@Model.UserName</li>
+                <li>性别：@Model.Gender</li>
+                <li>分组：@Model.GroupName</li>
+            </ul>
+        </div>
+    </fieldset>
+    <fieldset>
+        <legend>我的聊天信息(可随意修改)</legend>
+        <label>昵称：</label><input type="text" id="txtName" value="@Model.UserName" />
+        <br />
+        <label>消息：</label><input type="text" id="txtMsg" value="这是一条来自管理员的消息，菠菜们，大家好！" />
+        <hr />
+    </fieldset>
+    <fieldset>
+        <legend>毛都不管，直接发送</legend>
+        <button id="sendtoserver">发送</button>
+    </fieldset>
+    <fieldset>
+        <legend>按组发送</legend>
+        <select id="selectGroup">
+            <option value="-1">所有组</option>
+        </select>
+        <button id="sendByGroup">按"组"发送消息</button>
+    </fieldset>
+    <fieldset>
+        <legend>按客户端发送</legend>
+        <select id="selectClient">
+            <option value="-1">所有人</option>
+        </select>
+        <button id="sendByClient">按"客户端"发送消息</button>
+    </fieldset>
+    <div>
+        <label>已连接的客户端：</label>
+        <ul id="ulClient">
+
+        </ul>
+    </div>
+    <div>
+        <label>收到的消息：</label>
+        <ul id="ulMsg"></ul>
+    </div>
+
+</body>
+</html>
+<script>
+    $(function () {
+        // 这个方法是客户端的事件。这个事件可以由服务端来"调用"
+        // 这个事件用来接收聊天消息
+        $.connection.molHub.client.onMessage = function (msg) {
+            addMsga(msg);
+        }
+        // 同上
+        // 这个事件用来显示连接上来的客户端信息
+        $.connection.molHub.client.showClients = function (data)
+        {
+            if (data.GroupName != 'admin组') {
+                // 将连接上来的客户端显示到界面上
+                $('<li id="li' + data.ConnectionId + '">组名：' + data.GroupName + '，姓名：' + data.UserName + '，性别：' + data.Gender + '</li>').appendTo($('ul#ulClient'));
+                // 将连接上来的客户端分组显示到下拉框中
+                if (!isExistOption('selectGroup', data.GroupName)) {
+                    $('<option value="' + data.GroupName + '">' + data.GroupName + '</option>').appendTo("select#selectGroup");
+                }
+                // 将连接上来的客户端显示到下拉框中
+                $('<option value="' + data.ConnectionId + '">' + data.UserName + '</option>').appendTo('select#selectClient');
+            }
+        }
+        // 这是要传到服务端的参数
+        $.connection.hub.qs = { gender: "@Model.Gender", userName: "@Model.UserName", groupName: "@Model.GroupName" }
+        // 所有的准备工作做好以后，才向服务端发起连接
+        $.connection.hub.start().done(function (data) {// 连接成功后，执行这段话
+            addMsga("与服务端连接成功！");
+        }).fail(function () { // 连接失败后，执行这段话
+            addMsga("与服务端连接失败！");
+        });
+        // 发消息的按钮
+        $('button#sendtoserver').click(function () {
+            $.connection.molHub.server.sendMessage($('input#txtName').val(), $('input#txtMsg').val());
+        });
+        // 按组发送消息 
+        $('button#sendByGroup').click(function () {
+            $.connection.molHub.server.sendToClientByGroupAsync($('select#selectGroup').val(), $('input#txtMsg').val());
+        });
+        // 按客户端发送消息 
+        $('button#sendByClient').click(function () {
+            $.connection.molHub.server.sendToClientByNameAsync($('select#selectClient').val(), $('input#txtMsg').val());
+        });
+    });
+    // 显示消息
+    function addMsga(msg)
+    {
+        $('<li>' + msg + '</li>').appendTo($('ul#ulMsg'));
+    }
+
+    // 判断select中是否有指定value的项
+    function isExistOption(id,value) {  
+        var isExist = false;  
+        var count = $('#'+id).find('option').length;     
+        for(var i=0;i<count;i++)     
+        {     
+            if($('#'+id).get(0).options[i].value == value)     
+            {     
+                isExist = true;     
+                break;     
+            }     
+        }     
+        return isExist;  
+    }  
+</script>
